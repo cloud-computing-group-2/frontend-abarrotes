@@ -1,0 +1,9 @@
+{
+  "usuarios": [
+    {
+      "user_id": "test@correo.com",
+      "password": "123456",
+      "tenant_id": "tenant1"
+    }
+  ]
+}
