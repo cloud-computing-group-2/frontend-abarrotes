@@ -21,7 +21,12 @@ function App() {
     localStorage.clear();
     setIsLoggedIn(false);
   };
-
+  const removeFromCart = (index) => {
+  const newCart = [...cart];
+  newCart.splice(index, 1);
+  setCart(newCart);
+};
+  
   const addToCart = (product) => {
     setCart([...cart, product]);
   };
@@ -35,11 +40,13 @@ function App() {
     <BrowserRouter>
       <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} cartCount={cart.length} />
       <Routes>
+        <Route path="/carrito" element={<Carrito cart={cart} handlePurchase={handlePurchase} removeFromCart={removeFromCart} />} />
+
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} setUser={setUser} />} />
         {isLoggedIn && <Route path="/catalogo" element={<Catalogo addToCart={addToCart} />} />}
-        {isLoggedIn && <Route path="/carrito" element={<Carrito cart={cart} handlePurchase={handlePurchase} />} />}
+        {isLoggedIn && <Route path="/carrito" element={<Carrito cart={cart} handlePurchase={handlePurchase} removeFromCart={removeFromCart} />} />}
         {isLoggedIn && <Route path="/perfil" element={<Perfil user={user} orders={orders} />} />}
       </Routes>
     </BrowserRouter>
