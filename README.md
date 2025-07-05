@@ -1,1 +1,1 @@
-# frontend-abarrotes
+# Tienda de Abarrotes Multitenancy Frontend

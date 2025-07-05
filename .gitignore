@@ -1,0 +1,34 @@
+# dependencies
+/node_modules
+
+# production
+/dist
+
+# local env files
+.env
+.env.*.local
+
+# vite cache
+/.vite
+
+# build cache
+/.turbo
+/.parcel-cache
+
+# misc
+.DS_Store
+Thumbs.db
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
