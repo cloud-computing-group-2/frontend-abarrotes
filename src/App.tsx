@@ -6,6 +6,7 @@ import Register from './pages/Register'
 import ShopProducts from './pages/ShopProducts'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
+import Header from './components/Header'
 import { AuthProvider } from './contexts/AuthContext'
 import { ShopProvider } from './contexts/ShopContext'
 import { CartProvider } from './contexts/CartContext'
@@ -19,6 +20,7 @@ function App() {
         <CartProvider>
           <Router>
             <div className="min-h-screen bg-gray-50">
+              <Header />
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />

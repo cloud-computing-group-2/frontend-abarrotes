@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react'
 import { Product } from './ShopContext'
 import { ShopType } from '../App'
+import { useAuth } from './AuthContext'
 
 interface CartItem extends Product {
   quantity: number
@@ -35,8 +36,21 @@ interface CartProviderProps {
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([])
   const [currentTenant, setCurrentTenant] = useState<ShopType | null>(null)
+  const { isAuthenticated, user } = useAuth()
 
   const addToCart = (product: Product) => {
+    // Verificar si el usuario está autenticado
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para agregar productos al carrito')
+      return
+    }
+
+    // Verificar que el producto sea del tenant del usuario
+    if (user && user.tenant_id !== product.tenant) {
+      alert(`Solo puedes comprar productos de tu tienda (${user.tenant_id})`)
+      return
+    }
+
     setItems(prevItems => {
       // Si el carrito está vacío, establecer el tenant actual
       if (prevItems.length === 0) {

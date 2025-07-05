@@ -1,12 +1,20 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { User, Lock, Eye, EyeOff, ArrowLeft, Building, ChevronDown } from 'lucide-react'
+
+// Opciones de tienda
+const STORES = [
+  { label: 'Tottus', value: 'tottus' },
+  { label: 'Plaza Vea', value: 'plazavea' },
+  { label: 'Wong', value: 'wong' },
+]
 
 const Login = () => {
   const navigate = useNavigate()
-  const { login } = useAuth()
-  const [email, setEmail] = useState('')
+  const { login, loading } = useAuth()
+  const [userId, setUserId] = useState('')
+  const [tenantId, setTenantId] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -14,18 +22,26 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     setError('')
+    
+    // Validación básica
+    if (!userId.trim() || !tenantId || !password.trim()) {
+      setError('Por favor completa todos los campos.')
+      return
+    }
+    
+    setIsLoading(true)
 
     try {
-      const success = await login(email, password)
+      const success = await login(userId.trim(), tenantId, password)
       if (success) {
         navigate('/')
       } else {
-        setError('Correo electrónico o contraseña inválidos')
+        setError('Correo, tienda o contraseña inválidos')
       }
-    } catch (err) {
-      setError('Ocurrió un error. Por favor intenta de nuevo.')
+    } catch (err: any) {
+      console.error('Login error:', err)
+      setError('Error de conexión. Verifica tu conexión a internet e intenta de nuevo.')
     } finally {
       setIsLoading(false)
     }
@@ -54,24 +70,50 @@ const Login = () => {
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Correo Electrónico
+              <label htmlFor="userId" className="block text-sm font-medium text-gray-700 mb-2">
+                Correo
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="email"
-                  name="email"
+                  id="userId"
+                  name="userId"
                   type="email"
-                  autoComplete="email"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
                   className="input-field pl-10"
                   placeholder="Ingresa tu correo electrónico"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="tenantId" className="block text-sm font-medium text-gray-700 mb-2">
+                Tienda
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Building className="h-5 w-5 text-gray-400" />
+                </div>
+                <select
+                  id="tenantId"
+                  name="tenantId"
+                  required
+                  value={tenantId}
+                  onChange={(e) => setTenantId(e.target.value)}
+                  className="input-field pl-10 appearance-none"
+                >
+                  <option value="">Selecciona una tienda</option>
+                  {STORES.map(store => (
+                    <option key={store.value} value={store.value}>{store.label}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                </div>
               </div>
             </div>
 

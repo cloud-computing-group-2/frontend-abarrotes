@@ -52,90 +52,108 @@ const Home = () => {
         <div className="absolute bottom-40 right-10 w-2 h-2 bg-green-400/30 rounded-full animate-bounce" style={{animationDelay: '1.5s'}}></div>
       </div>
       
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-3">
-              <ShoppingBag className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Tienda de Abarrotes</h1>
-            </div>
 
-            <div className="flex items-center space-x-4">
-              {isAuthenticated ? (
-                <div className="flex items-center space-x-4">
-                  <span className="text-gray-700">¡Bienvenido, {user?.name}!</span>
+
+              {/* Hero Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-6 shadow-lg">
+              <ShoppingBag className="h-10 w-10 text-white" />
+            </div>
+            {isAuthenticated ? (
+              <>
+                <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
+                  ¡Bienvenido a tu Tienda!
+                </h2>
+                <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                  Estás conectado a {user?.tenant_id === 'tottus' ? 'Tottus' : 
+                    user?.tenant_id === 'plazavea' ? 'Plaza Vea' : 
+                    user?.tenant_id === 'wong' ? 'Wong' : user?.tenant_id}. 
+                  Explora los productos disponibles en tu tienda favorita.
+                </p>
+                <div className="mt-8">
                   <button
-                    onClick={logout}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    onClick={() => navigate(`/shop/${user?.tenant_id}`)}
+                    className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-full hover:shadow-lg hover:scale-105 transition-all duration-300"
                   >
-                    Cerrar Sesión
+                    Ir a mi Tienda
+                    <ArrowRight className="ml-2 h-5 w-5" />
                   </button>
                 </div>
-              ) : (
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => navigate('/login')}
-                    className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    Iniciar Sesión
-                  </button>
-                  <button
-                    onClick={() => navigate('/register')}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Registrarse
-                  </button>
+              </>
+            ) : (
+              <>
+                <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
+                  Elige Tu Tienda de Abarrotes Favorita
+                </h2>
+                <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                  Descubre productos increíbles de las principales cadenas de abarrotes de Perú. 
+                  Cada tienda ofrece productos únicos y experiencias adaptadas a tus necesidades.
+                </p>
+                <div className="flex justify-center mt-8 space-x-4">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                  <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-3 h-3 bg-pink-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-6 shadow-lg">
-            <ShoppingBag className="h-10 w-10 text-white" />
-          </div>
-          <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
-            Elige Tu Tienda de Abarrotes Favorita
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Descubre productos increíbles de las principales cadenas de abarrotes de Perú. 
-            Cada tienda ofrece productos únicos y experiencias adaptadas a tus necesidades.
-          </p>
-          <div className="flex justify-center mt-8 space-x-4">
-            <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-            <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-            <div className="w-3 h-3 bg-pink-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
-          </div>
-        </div>
 
         {/* Shop Cards */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
-          {shops.map((shop) => (
-            <div
-              key={shop.id}
-              className={`${shop.bgColor} ${shop.borderColor} border-2 rounded-2xl p-8 hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer relative overflow-hidden group`}
-              onClick={() => navigate(`/shop/${shop.id}`)}
-            >
-              {/* Card Background Effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              {/* Shine Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              <div className="text-center relative z-10">
-                <div className="text-6xl mb-4 transform group-hover:scale-110 transition-transform duration-300">{shop.icon}</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-gray-800 transition-colors duration-300">{shop.name}</h3>
-                <p className="text-gray-600 mb-6 group-hover:text-gray-700 transition-colors duration-300">{shop.description}</p>
-                                                  <div className={`inline-flex items-center px-6 py-3 rounded-full text-white font-medium bg-gradient-to-r ${shop.color} hover:shadow-lg hover:scale-110 transition-all duration-300 group-hover:bg-opacity-90`}>
-                  Explorar Productos
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+          {isAuthenticated ? (
+            // Mostrar solo la tienda del usuario autenticado
+            (() => {
+              const userShop = shops.find(shop => shop.id === user?.tenant_id)
+              if (!userShop) return null
+              
+              return (
+                <div className="md:col-span-3 flex justify-center">
+                  <div
+                    className={`${userShop.bgColor} ${userShop.borderColor} border-2 rounded-2xl p-8 hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer relative overflow-hidden group max-w-md w-full`}
+                    onClick={() => navigate(`/shop/${userShop.id}`)}
+                  >
+                    {/* Card Background Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    {/* Shine Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    <div className="text-center relative z-10">
+                      <div className="text-6xl mb-4 transform group-hover:scale-110 transition-transform duration-300">{userShop.icon}</div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-gray-800 transition-colors duration-300">{userShop.name}</h3>
+                      <p className="text-gray-600 mb-6 group-hover:text-gray-700 transition-colors duration-300">{userShop.description}</p>
+                      <div className={`inline-flex items-center px-6 py-3 rounded-full text-white font-medium bg-gradient-to-r ${userShop.color} hover:shadow-lg hover:scale-110 transition-all duration-300 group-hover:bg-opacity-90`}>
+                        Explorar Productos
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()
+          ) : (
+            // Mostrar todas las tiendas para usuarios no autenticados
+            shops.map((shop) => (
+              <div
+                key={shop.id}
+                className={`${shop.bgColor} ${shop.borderColor} border-2 rounded-2xl p-8 hover:shadow-2xl transition-all duration-500 hover:scale-105 cursor-pointer relative overflow-hidden group`}
+                onClick={() => navigate(`/shop/${shop.id}`)}
+              >
+                {/* Card Background Effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                {/* Shine Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                <div className="text-center relative z-10">
+                  <div className="text-6xl mb-4 transform group-hover:scale-110 transition-transform duration-300">{shop.icon}</div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-gray-800 transition-colors duration-300">{shop.name}</h3>
+                  <p className="text-gray-600 mb-6 group-hover:text-gray-700 transition-colors duration-300">{shop.description}</p>
+                  <div className={`inline-flex items-center px-6 py-3 rounded-full text-white font-medium bg-gradient-to-r ${shop.color} hover:shadow-lg hover:scale-110 transition-all duration-300 group-hover:bg-opacity-90`}>
+                    Explorar Productos
+                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Credits Section */}
