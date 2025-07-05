@@ -42,10 +42,8 @@ const CartPage = () => {
       return
     }
 
-    navigate(`/checkout/${shopType}`)
+    navigate('/checkout')
   }
-
-  const tenantName = getShopName(shopType)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -55,14 +53,16 @@ const CartPage = () => {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate(`/shop/${shopType}`)}
+                onClick={() => navigate('/')}
                 className="text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="h-6 w-6" />
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Carrito de Compras</h1>
-                <p className="text-gray-600">{tenantName}</p>
+                <p className="text-gray-600">
+                  {items.length > 0 ? getShopName(items[0].tenant) : 'Productos de la tienda'}
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -81,12 +81,12 @@ const CartPage = () => {
           <div className="text-center py-12">
             <ShoppingBag className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Tu carrito está vacío</h2>
-            <p className="text-gray-600 mb-6">Agrega productos de {tenantName} para continuar</p>
+            <p className="text-gray-600 mb-6">Agrega productos de cualquier tienda para continuar</p>
             <button
-              onClick={() => navigate(`/shop/${shopType}`)}
+              onClick={() => navigate('/')}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Ir a {tenantName}
+              Ir a las tiendas
             </button>
           </div>
         ) : (
@@ -95,7 +95,9 @@ const CartPage = () => {
             <div className="bg-white rounded-lg shadow-sm">
               <div className="p-6 border-b">
                 <h2 className="text-lg font-semibold text-gray-900">Productos en tu carrito</h2>
-                <p className="text-sm text-gray-600">Solo productos de {tenantName}</p>
+                <p className="text-sm text-gray-600">
+                  {items.length > 0 ? `Solo productos de ${getShopName(items[0].tenant)}` : 'Productos de la tienda'}
+                </p>
               </div>
               <div className="divide-y">
                 {items.map((item) => (
@@ -166,7 +168,7 @@ const CartPage = () => {
             {/* Checkout Button */}
             <div className="flex space-x-4">
               <button
-                onClick={() => navigate(`/shop/${shopType}`)}
+                onClick={() => navigate('/')}
                 className="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Seguir comprando

@@ -37,13 +37,18 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [currentTenant, setCurrentTenant] = useState<ShopType | null>(null)
 
   const addToCart = (product: Product) => {
-    // Solo permitir agregar productos del tenant actual
-    if (currentTenant && product.tenant !== currentTenant) {
-      alert('Solo puedes comprar productos de la tienda actual')
-      return
-    }
-    
     setItems(prevItems => {
+      // Si el carrito está vacío, establecer el tenant actual
+      if (prevItems.length === 0) {
+        setCurrentTenant(product.tenant)
+      }
+      
+      // Solo permitir productos del mismo tenant
+      if (prevItems.length > 0 && prevItems[0].tenant !== product.tenant) {
+        alert('Solo puedes comprar productos de la tienda actual')
+        return prevItems // No agregar productos de otros tenants
+      }
+      
       const existingItem = prevItems.find(item => item.id === product.id)
       if (existingItem) {
         return prevItems.map(item =>

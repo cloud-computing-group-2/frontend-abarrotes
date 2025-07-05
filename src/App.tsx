@@ -26,6 +26,7 @@ function App() {
                 <Route path="/shop/:shopType" element={<ShopProducts />} />
                 <Route path="/cart/:shopType" element={<CartPage />} />
                 <Route path="/checkout/:shopType" element={<CheckoutPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
               </Routes>
             </div>
           </Router>

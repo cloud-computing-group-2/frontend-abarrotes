@@ -7,7 +7,7 @@ import { ShopType } from '../App'
 
 const CheckoutPage = () => {
   const navigate = useNavigate()
-  const { shopType } = useParams<{ shopType: ShopType }>()
+  const { shopType } = useParams<{ shopType?: ShopType }>()
   const {
     items,
     currentTenant,
@@ -18,11 +18,12 @@ const CheckoutPage = () => {
   const { getShopName } = useShop()
   const { isAuthenticated } = useAuth()
 
-  if (!shopType || !['tottus', 'plazavea', 'wong'].includes(shopType)) {
+  // Si no hay shopType en la URL, verificar que hay productos en el carrito
+  if (!shopType && items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Tienda no encontrada</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Carrito vacío</h1>
           <button
             onClick={() => navigate('/')}
             className="text-blue-600 hover:text-blue-700"
@@ -46,7 +47,7 @@ const CheckoutPage = () => {
           <ShoppingBag className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Tu carrito está vacío</h1>
           <button
-            onClick={() => navigate(`/shop/${shopType}`)}
+            onClick={() => navigate('/')}
             className="text-blue-600 hover:text-blue-700"
           >
             Ir a comprar
@@ -59,9 +60,8 @@ const CheckoutPage = () => {
   const handleConfirmOrder = () => {
     const totalPrice = getTotalPrice()
     const totalItems = getTotalItems()
-    const tenantName = getShopName(shopType)
+    const tenantName = items.length > 0 ? getShopName(items[0].tenant) : 'Tienda'
     
-    // Mostrar mensaje de éxito
     const message = `¡Compra Exitosa!
 
 Tenant: ${tenantName}
@@ -72,10 +72,10 @@ Precio Total: $${totalPrice.toFixed(2)}
     
     alert(message)
     clearCart()
-    navigate(`/shop/${shopType}`)
+    navigate('/')
   }
 
-  const tenantName = getShopName(shopType)
+  const tenantName = items.length > 0 ? getShopName(items[0].tenant) : 'Tienda'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,14 +85,16 @@ Precio Total: $${totalPrice.toFixed(2)}
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate(`/cart/${shopType}`)}
+                onClick={() => navigate('/')}
                 className="text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="h-6 w-6" />
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Confirmar Pedido</h1>
-                <p className="text-gray-600">{tenantName}</p>
+                <p className="text-gray-600">
+                  {items.length > 0 ? getShopName(items[0].tenant) : 'Productos de la tienda'}
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -247,10 +249,10 @@ Precio Total: $${totalPrice.toFixed(2)}
                 </button>
 
                 <button
-                  onClick={() => navigate(`/cart/${shopType}`)}
+                  onClick={() => navigate('/')}
                   className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                 >
-                  Volver al Carrito
+                  Volver al Inicio
                 </button>
               </div>
             </div>
