@@ -4,7 +4,7 @@ import { Product } from '../contexts/ShopContext'
 
 interface SearchBarProps {
   products: Product[]
-  onSearchResults: (results: Product[]) => void
+  onSearchResults: (results: Product[], query: string) => void
   placeholder?: string
 }
 
@@ -54,22 +54,21 @@ const SearchBar = ({ products, onSearchResults, placeholder = "Buscar productos.
       
       // Buscar en todos los campos del producto
       for (const field of searchFields) {
-        const fieldValue = product[field as keyof Product] as string
-        
-        // Búsqueda por prefijo (prioridad alta)
-        if (prefixSearch(fieldValue, searchTerm)) {
-          results.unshift(product) // Agregar al inicio para prioridad
-          matchFound = true
-          break
-        }
-        
-        // Búsqueda fuzzy (prioridad media)
-        if (fuzzySearch(fieldValue, searchTerm)) {
-          results.push(product)
-          matchFound = true
-          break
-        }
+      const fieldValue = product[field as keyof Product]
+      if (typeof fieldValue !== 'string') continue  // ✅ validación segura
+
+      if (prefixSearch(fieldValue, searchTerm)) {
+        results.unshift(product)
+        matchFound = true
+        break
       }
+
+      if (fuzzySearch(fieldValue, searchTerm)) {
+        results.push(product)
+        matchFound = true
+        break
+      }
+    }
     })
     
     // Eliminar duplicados y limitar resultados
@@ -81,13 +80,24 @@ const SearchBar = ({ products, onSearchResults, placeholder = "Buscar productos.
   }
 
   // Efecto para manejar la búsqueda
-  useEffect(() => {
-    const results = searchProducts(query)
-    setFilteredProducts(results)
-    onSearchResults(results)
-    setIsDropdownOpen(query.length > 0 && results.length > 0)
+  // Efecto para manejar la búsqueda solo cuando cambia el query
+useEffect(() => {
+  if (query.trim().length < 2) {
+    setFilteredProducts([])
+    onSearchResults([], query)
+    setIsDropdownOpen(false)
     setSelectedIndex(-1)
-  }, [query, products])
+    return
+  }
+
+  const results = searchProducts(query)
+  setFilteredProducts(results)
+  onSearchResults(results, query)
+  setIsDropdownOpen(results.length > 0)
+  setSelectedIndex(-1)
+}, [query])
+
+
 
   // Efecto para manejar clicks fuera del dropdown
   useEffect(() => {
@@ -133,14 +143,14 @@ const SearchBar = ({ products, onSearchResults, placeholder = "Buscar productos.
     setQuery(product.name)
     setIsDropdownOpen(false)
     setSelectedIndex(-1)
-    onSearchResults([product])
+    onSearchResults([product],query)
   }
 
   const handleClearSearch = () => {
     setQuery('')
     setIsDropdownOpen(false)
     setSelectedIndex(-1)
-    onSearchResults([])
+    onSearchResults([],query)
     inputRef.current?.focus()
   }
 
@@ -186,39 +196,33 @@ const SearchBar = ({ products, onSearchResults, placeholder = "Buscar productos.
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-80 overflow-y-auto">
           <div className="py-1">
             {filteredProducts.map((product, index) => (
-              <div
-                key={product.id}
-                onClick={() => handleSelectProduct(product)}
-                className={`px-4 py-3 cursor-pointer hover:bg-gray-50 ${
-                  index === selectedIndex ? 'bg-blue-50' : ''
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-10 h-10 object-cover rounded"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div 
-                      className="font-medium text-gray-900"
-                      dangerouslySetInnerHTML={{
-                        __html: highlightMatch(product.name, query)
-                      }}
-                    />
-                    <div 
-                      className="text-sm text-gray-600 truncate"
-                      dangerouslySetInnerHTML={{
-                        __html: highlightMatch(product.description, query)
-                      }}
-                    />
-                    <div className="text-xs text-gray-500">
-                      {product.category} • ${product.price.toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+  <div
+    key={product.id}
+    onClick={() => handleSelectProduct(product)}
+    className={`px-4 py-3 cursor-pointer hover:bg-gray-50 ${
+      index === selectedIndex ? 'bg-blue-50' : ''
+    }`}
+  >
+    <div className="flex flex-col">
+      <div
+        className="font-medium text-gray-900"
+        dangerouslySetInnerHTML={{
+          __html: highlightMatch(product.name, query)
+        }}
+      />
+      <div
+        className="text-sm text-gray-600 truncate"
+        dangerouslySetInnerHTML={{
+          __html: highlightMatch(product.description || '', query)
+        }}
+      />
+      <div className="text-xs text-gray-500">
+        {product.category} • ${product.price.toFixed(2)}
+      </div>
+    </div>
+  </div>
+    ))}
+
           </div>
           
           {filteredProducts.length === 0 && query && (

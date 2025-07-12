@@ -19,7 +19,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -46,6 +46,7 @@ const Login = () => {
       setIsLoading(false)
     }
   }
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

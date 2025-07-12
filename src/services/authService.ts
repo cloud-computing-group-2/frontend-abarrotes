@@ -37,24 +37,31 @@ async function register(data: RegisterData): Promise<AuthResponse> {
 
 async function login(data: LoginData): Promise<{ statusCode: number; token?: string; message?: string }> {
   try {
-    console.log('Sending login request:', data);
     const res = await fetch(`${API_BASE}/usuarios/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+
     const payload = await res.json();
     console.log('Login API response:', { status: res.status, payload });
-    // tu lambda devuelve { token } en raíz si OK
-    if (res.ok && payload.token) {
-      return { statusCode: res.status, token: payload.token };
+
+    // 🔧 Manejo flexible del token
+    const token = payload.token || (payload.body && payload.body.token);
+    const expires = payload.expires_at || (payload.body && payload.body.expires_at);
+
+    if (res.ok && token) {
+      return { statusCode: res.status, token };
     }
-    return { statusCode: res.status, message: typeof payload === 'string' ? payload : payload.body };
+
+    const message = payload.error || payload.message || payload.body?.error || 'Error desconocido';
+    return { statusCode: res.status, message };
   } catch (error) {
     console.error('Login API error:', error);
     throw error;
   }
 }
+
 
 async function validateUser(token: string, tenant_id: string): Promise<{ valid: boolean; message?: string }> {
   const res = await fetch(`${API_BASE}/usuarios/validar`, {

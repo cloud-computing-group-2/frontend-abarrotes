@@ -1,9 +1,9 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react' // ✅ AÑADIDO useEffect
 import { useAuth } from '../contexts/AuthContext'
-import { useShop } from '../contexts/ShopContext'
+import { useShop } from '../contexts/ShopContext' // ✅ Asegúrate de incluir loadShopProducts
 import { useCart } from '../contexts/CartContext'
-import { ArrowLeft, ShoppingCart, Star, Filter, X, Search } from 'lucide-react'
+import { ArrowLeft, ShoppingCart, Star, X, Search } from 'lucide-react'
 import { ShopType } from '../App'
 import SearchBar from '../components/SearchBar'
 import { Product } from '../contexts/ShopContext'
@@ -12,10 +12,26 @@ const ShopProducts = () => {
   const { shopType } = useParams<{ shopType: ShopType }>()
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
-  const { getShopProducts, getShopTheme, getShopName } = useShop()
+  const { getShopProducts, getShopTheme, getShopName, loadShopProducts, hasMore } = useShop()
   const { addToCart, getTotalItems, setCurrentTenant } = useCart()
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [isSearchActive, setIsSearchActive] = useState(false)
+
+  const [token, setToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem('authToken');
+    setToken(storedToken);
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && shopType && token) {
+      loadShopProducts(shopType, token);
+    }
+  }, [isAuthenticated, shopType, token]);
+  //console.log("ShopType:", shopType);
+  //console.log("Token:", token);
+
 
   if (!shopType || !['tottus', 'plazavea', 'wong'].includes(shopType)) {
     return (
@@ -34,19 +50,17 @@ const ShopProducts = () => {
   const theme = getShopTheme(shopType)
   const shopName = getShopName(shopType)
 
-  // Función para manejar los resultados de búsqueda
-  const handleSearchResults = (results: Product[]) => {
-    setFilteredProducts(results)
-    setIsSearchActive(results.length > 0)
-  }
+  const handleSearchResults = (results: Product[], query: string) => {
+  setFilteredProducts(results)
+  setIsSearchActive(query.trim().length >= 2)
+}
 
-  // Función para limpiar la búsqueda
   const handleClearSearch = () => {
-    setFilteredProducts([])
-    setIsSearchActive(false)
-  }
+  setFilteredProducts([])
+  setIsSearchActive(false)
+}
 
-  // Productos a mostrar (filtrados o todos)
+
   const displayProducts = isSearchActive ? filteredProducts : products
 
   const handleBuyNow = (productId: string) => {
@@ -56,15 +70,22 @@ const ShopProducts = () => {
     }
     const product = products.find(p => p.id === productId)
     if (product) {
-      // Establecer el tenant actual antes de agregar al carrito
       setCurrentTenant(shopType)
       addToCart(product)
     }
   }
 
+  const handleLoadMore = () => {
+    const token = localStorage.getItem('authToken')
+    if (token) {
+      loadShopProducts(shopType, token, true)  // true = append
+    }
+  }
+
+
+
   return (
     <div className={`min-h-screen ${theme.background}`}>
-      {/* Header */}
       <header className={`${theme.primary} shadow-lg`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
@@ -78,12 +99,12 @@ const ShopProducts = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <SearchBar 
+              <SearchBar
                 products={products}
                 onSearchResults={handleSearchResults}
                 placeholder={`Buscar en ${shopName}...`}
               />
-              <button 
+              <button
                 onClick={() => navigate(`/cart/${shopType}`)}
                 className="text-white hover:text-gray-200 relative"
               >
@@ -99,7 +120,6 @@ const ShopProducts = () => {
         </div>
       </header>
 
-      {/* Products Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -108,10 +128,9 @@ const ShopProducts = () => {
                 {isSearchActive ? 'Resultados de Búsqueda' : 'Nuestros Productos'}
               </h2>
               <p className="text-gray-600">
-                {isSearchActive 
-                  ? `Encontrados ${displayProducts.length} productos` 
-                  : 'Explora nuestra selección cuidadosamente curada'
-                }
+                {isSearchActive
+                  ? `Encontrados ${displayProducts.length} productos`
+                  : 'Explora nuestra selección cuidadosamente curada'}
               </p>
             </div>
             {isSearchActive && (
@@ -126,32 +145,22 @@ const ShopProducts = () => {
           </div>
         </div>
 
-        {/* Search Results Empty State */}
         {isSearchActive && displayProducts.length === 0 && (
           <div className="text-center py-12">
             <Search className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No se encontraron productos</h3>
             <p className="text-gray-600 mb-4">Intenta con otros términos de búsqueda</p>
-            <button
-              onClick={handleClearSearch}
-              className="text-blue-600 hover:text-blue-700"
-            >
+            <button onClick={handleClearSearch} className="text-blue-600 hover:text-blue-700">
               Ver todos los productos
             </button>
           </div>
         )}
 
-        {/* Products Grid */}
         {displayProducts.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {displayProducts.map((product) => (
               <div key={product.id} className="card overflow-hidden">
                 <div className="relative">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-48 object-cover"
-                  />
                   
                   {!product.inStock && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -159,7 +168,6 @@ const ShopProducts = () => {
                     </div>
                   )}
                 </div>
-                
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
@@ -168,11 +176,9 @@ const ShopProducts = () => {
                       <span className="text-sm text-gray-600">4.5</span>
                     </div>
                   </div>
-                  
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                     {product.description}
                   </p>
-                  
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-2xl font-bold text-gray-900">
@@ -180,7 +186,6 @@ const ShopProducts = () => {
                       </span>
                       <span className="text-sm text-gray-500 ml-2">por unidad</span>
                     </div>
-                    
                     <button
                       onClick={() => handleBuyNow(product.id)}
                       disabled={!product.inStock}
@@ -189,7 +194,6 @@ const ShopProducts = () => {
                       {product.inStock ? 'Comprar Ahora' : 'Agotado'}
                     </button>
                   </div>
-                  
                   <div className="mt-3">
                     <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
                       {product.category}
@@ -200,8 +204,17 @@ const ShopProducts = () => {
             ))}
           </div>
         )}
+        {!isSearchActive && hasMore(shopType) && (
+        <div className="text-center mt-8">
+          <button
+            onClick={handleLoadMore}
+            className="px-6 py-3 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-700 transition-colors">
+            Cargar más
+          </button>
+        </div>
+      )}
 
-        {/* Empty State */}
+
         {!isSearchActive && products.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🛒</div>
@@ -214,4 +227,4 @@ const ShopProducts = () => {
   )
 }
 
-export default ShopProducts 
+export default ShopProducts
