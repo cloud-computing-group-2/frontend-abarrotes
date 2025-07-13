@@ -2,7 +2,7 @@
 // src/services/productService.ts
 import { Product } from '../contexts/ShopContext';
 
-const API_BASE = 'https://oeobfko05m.execute-api.us-east-1.amazonaws.com/dev';
+const API_BASE = 'https://726nsxq3m7.execute-api.us-east-1.amazonaws.com/dev';
 
 type CartItemInput = {
   tenant_id: string;

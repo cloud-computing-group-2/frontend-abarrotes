@@ -16,7 +16,7 @@ export interface AuthResponse {
   body: any;
 }
 
-const API_BASE = 'https://r4o40joe79.execute-api.us-east-1.amazonaws.com/dev';
+const API_BASE = 'https://5sf0v1u4uh.execute-api.us-east-1.amazonaws.com/dev';
 
 async function register(data: RegisterData): Promise<AuthResponse> {
   try {
