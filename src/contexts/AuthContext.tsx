@@ -4,6 +4,7 @@ import authService, { RegisterData, LoginData } from '../services/authService';
 interface User {
   user_id: string;
   tenant_id: string;
+  token?: string; 
 }
 
 interface AuthContextType {
@@ -30,7 +31,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const userId = localStorage.getItem('userId');
     
     if (token && tenantId && userId) {
-      setUser({ user_id: userId, tenant_id: tenantId });
+      setUser({ user_id: userId, tenant_id: tenantId, token: token});
     }
   }, []);
 
@@ -58,7 +59,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('authToken', token);
         localStorage.setItem('tenantId', tenant_id);
         localStorage.setItem('userId', user_id);
-        setUser({ user_id, tenant_id });
+        setUser({ user_id, tenant_id, token });
         return true;
       }
       return false;

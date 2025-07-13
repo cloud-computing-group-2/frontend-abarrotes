@@ -4,6 +4,8 @@ import { useShop } from '../contexts/ShopContext'
 import { useAuth } from '../contexts/AuthContext'
 import { ArrowLeft, CreditCard, ShoppingBag, CheckCircle } from 'lucide-react'
 import { ShopType } from '../App'
+import { completeCart } from '../services/cartService'
+import { useState } from 'react'
 
 const CheckoutPage = () => {
   const navigate = useNavigate()
@@ -16,7 +18,8 @@ const CheckoutPage = () => {
     clearCart
   } = useCart()
   const { getShopName } = useShop()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
+  const [ loading, setLoading ] = useState(false);
 
   // Si no hay shopType en la URL, verificar que hay productos en el carrito
   if (!shopType && items.length === 0) {
@@ -57,23 +60,46 @@ const CheckoutPage = () => {
     )
   }
 
-  const handleConfirmOrder = () => {
-    const totalPrice = getTotalPrice()
-    const totalItems = getTotalItems()
-    const tenantName = items.length > 0 ? getShopName(items[0].tenant) : 'Tienda'
-    
+const handleConfirmOrder = async () => {
+  if (!isAuthenticated || !user) {
+    alert('Debes iniciar sesión para confirmar tu compra');
+    return;
+  }
+  
+  setLoading(true);
+
+  try {
+    await completeCart(
+      {
+        tenant_id: user.tenant_id,
+        user_id: user.user_id,
+      },
+      user?.token
+    );
+
+    const totalPrice = getTotalPrice();
+    const totalItems = getTotalItems();
+    const tenantName = items.length > 0 ? getShopName(items[0].tenant) : 'Tienda';
+
     const message = `¡Compra Exitosa!
 
 Tenant: ${tenantName}
 Productos: ${totalItems} items
 Precio Total: $${totalPrice.toFixed(2)}
 
-¡Gracias por tu compra! Tu pedido ha sido procesado.`
-    
-    alert(message)
-    clearCart()
-    navigate('/')
+¡Gracias por tu compra! Tu pedido ha sido procesado.`;
+
+    alert(message);
+    clearCart();
+    navigate('/');
+
+  } catch (error: any) {
+    console.error('Error al confirmar la compra en backend:', error.message);
+    alert('Ocurrió un error al confirmar tu compra. Intenta nuevamente.');
+  } finally {
+    setLoading(false); 
   }
+};
 
   const tenantName = items.length > 0 ? getShopName(items[0].tenant) : 'Tienda'
 
@@ -259,6 +285,12 @@ Precio Total: $${totalPrice.toFixed(2)}
           </div>
         </div>
       </div>
+
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
     </div>
   )
 }

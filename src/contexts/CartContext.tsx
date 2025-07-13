@@ -2,6 +2,23 @@ import React, { createContext, useContext, useState, ReactNode } from 'react'
 import { Product } from './ShopContext'
 import { ShopType } from '../App'
 import { useAuth } from './AuthContext'
+import { addCartItem, deleteCartItem, updateCartItem } from '../services/cartService'; 
+
+/*
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  tenant: string;
+  // ...
+};
+
+type User = {
+  id: string;
+  tenant_id: string;
+};
+
+*/
 
 interface CartItem extends Product {
   quantity: number
@@ -38,58 +55,126 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [currentTenant, setCurrentTenant] = useState<ShopType | null>(null)
   const { isAuthenticated, user } = useAuth()
 
-  const addToCart = (product: Product) => {
-    // Verificar si el usuario está autenticado
+  const addToCart = async (product: Product) => {
     if (!isAuthenticated) {
-      alert('Debes iniciar sesión para agregar productos al carrito')
-      return
+      alert('Debes iniciar sesión');
+      return;
     }
 
-    // Verificar que el producto sea del tenant del usuario
     if (user && user.tenant_id !== product.tenant) {
-      alert(`Solo puedes comprar productos de tu tienda (${user.tenant_id})`)
-      return
+      alert(`Solo puedes comprar productos de tu tienda (${user.tenant_id})`);
+      return;
     }
 
-    setItems(prevItems => {
-      // Si el carrito está vacío, establecer el tenant actual
-      if (prevItems.length === 0) {
-        setCurrentTenant(product.tenant)
-      }
-      
-      // Solo permitir productos del mismo tenant
-      if (prevItems.length > 0 && prevItems[0].tenant !== product.tenant) {
-        alert('Solo puedes comprar productos de la tienda actual')
-        return prevItems // No agregar productos de otros tenants
-      }
-      
-      const existingItem = prevItems.find(item => item.id === product.id)
+    const existingItem = items.find(item => item.id === product.id);
+    const newQuantity = existingItem ? existingItem.quantity + 1 : 1;
+
+    // Backup del carrito actual
+    const previousItems = [...items];
+
+    try {
+      // Optimistic update
+      setItems(prevItems => {
+        if (existingItem) {
+          return prevItems.map(item =>
+            item.id === product.id
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          );
+        } else {
+          setCurrentTenant(product.tenant);
+          return [...prevItems, { ...product, quantity: 1 }];
+        }
+      });
+
+      // Backend update
       if (existingItem) {
-        return prevItems.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
+        await updateCartItem(
+          {
+            tenant_id: user?.tenant_id,
+            user_id: user?.user_id,
+            product_id: product.id,
+            amount: newQuantity,
+          },
+          user?.token
+        );
+      } else {
+        await addCartItem(
+          {
+            tenant_id: user?.tenant_id,
+            user_id: user?.user_id,
+            product_id: product.id,
+            amount: 1,
+          },
+          user?.token
+        );
       }
-      return [...prevItems, { ...product, quantity: 1 }]
-    })
-  }
+
+    } catch (error: any) {
+      // Revert if backend fails
+      setItems(previousItems);
+      alert('Error al actualizar el carrito: ' + error.message);
+      console.error('Error en el backend:', error.message);
+    }
+  };
+
+
 
   const removeFromCart = (productId: string) => {
+
+      if (user && user.token) {
+        deleteCartItem(
+          {
+            tenant_id: user.tenant_id,
+            user_id: user.user_id,
+            product_id: productId,
+          },
+          user.token
+        ).then(response => {
+          console.log(response.message);
+        }).catch(error => {
+          console.error('Error al eliminar producto del carrito:', error.message);
+        });
+      } else {
+        console.error('Usuario no autenticado');
+      }
+
     setItems(prevItems => prevItems.filter(item => item.id !== productId))
   }
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = async (productId: string, quantity: number) => {
+    if (!user) return;
+
     if (quantity <= 0) {
-      removeFromCart(productId)
-      return
+      removeFromCart(productId); // Aquí podrías también hacer una llamada al backend si quieres
+      return;
     }
+    const previousItems = [...items];
     setItems(prevItems =>
       prevItems.map(item =>
         item.id === productId ? { ...item, quantity } : item
       )
-    )
-  }
+    );
+
+    try {
+      await updateCartItem(
+        {
+          tenant_id: user.tenant_id,
+          user_id: user.user_id,
+          product_id: productId,
+          amount: quantity,
+        },
+        user.token
+      );
+    } catch (error: any) {
+      setItems(previousItems);
+      alert('Error al actualizar el carrito: ' + error.message);
+      console.error('Error en el backend:', error.message);
+    }
+  };
+
+
+
 
   const clearCart = () => {
     setItems([])
