@@ -57,7 +57,13 @@ const Header = () => {
             {isAuthenticated ? (
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2">
-                  <User className="h-5 w-5 text-gray-600" />
+                  <button
+                    onClick={() => navigate('/history')}
+                    className="focus:outline-none"
+                    title="Ver historial de compras"
+                  >
+                    <User className="h-5 w-5 text-gray-600 hover:text-blue-600 transition-colors" />
+                  </button>
                   <span className="text-sm text-gray-700">
                     Bienvenido, {user?.user_id}
                   </span>

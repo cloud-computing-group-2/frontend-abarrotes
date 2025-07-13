@@ -133,3 +133,33 @@ export async function completeCart(
     message: result.message,
   };
 }
+
+// aca iria pero por ahora esta con data falsa
+export async function getPurchaseHistory(
+  tenant_id: string,
+  token: string,
+  limit = 10
+): Promise<any[]> {
+  // Datos fake para pruebas
+  return [
+    {
+      id: '1',
+      shop: 'Tienda Central',
+      date: '2024-06-01',
+      items: [
+        { name: 'Arroz', quantity: 2, price: 5.5 },
+        { name: 'Azúcar', quantity: 1, price: 4.0 },
+      ],
+      total: 15.0,
+    },
+    {
+      id: '2',
+      shop: 'Bodega Norte',
+      date: '2024-05-28',
+      items: [
+        { name: 'Aceite', quantity: 1, price: 10.0 },
+      ],
+      total: 10.0,
+    },
+  ];
+}

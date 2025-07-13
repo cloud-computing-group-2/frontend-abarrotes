@@ -39,8 +39,8 @@ const CheckoutPage = () => {
   }
 
   if (!isAuthenticated) {
-    navigate('/login')
-    return null
+    navigate('/login');
+    return null;
   }
 
   if (items.length === 0) {
@@ -142,11 +142,12 @@ Precio Total: $${totalPrice.toFixed(2)}
               <div className="space-y-4">
                 {items.map((item) => (
                   <div key={item.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                    <img
+                    {/* Imagen eliminada */}
+                    {/* <img
                       src={item.image}
                       alt={item.name}
                       className="w-16 h-16 object-cover rounded-lg"
-                    />
+                    /> */}
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{item.name}</h3>
                       <p className="text-sm text-gray-600">{item.description}</p>

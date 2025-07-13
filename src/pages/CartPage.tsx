@@ -102,11 +102,7 @@ const CartPage = () => {
               <div className="divide-y">
                 {items.map((item) => (
                   <div key={item.id} className="p-6 flex items-center space-x-4">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-20 h-20 object-cover rounded-lg"
-                    />
+                    {/* Imagen eliminada */}
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{item.name}</h3>
                       <p className="text-sm text-gray-600">{item.description}</p>

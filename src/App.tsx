@@ -10,6 +10,7 @@ import Header from './components/Header'
 import { AuthProvider } from './contexts/AuthContext'
 import { ShopProvider } from './contexts/ShopContext'
 import { CartProvider } from './contexts/CartContext'
+import HistoryPage from './pages/HistoryPage'
 
 export type ShopType = 'tottus' | 'plazavea' | 'wong'
 
@@ -29,6 +30,7 @@ function App() {
                 <Route path="/cart/:shopType" element={<CartPage />} />
                 <Route path="/checkout/:shopType" element={<CheckoutPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/history" element={<HistoryPage />} />
               </Routes>
             </div>
           </Router>
