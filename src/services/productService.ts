@@ -8,6 +8,7 @@ export async function fetchShopProducts(
   token: string,
   nextToken?: string
 ): Promise<{ items: Product[]; nextToken: string | null }> {
+  
   const url = new URL(`${API_BASE}/productos/listar`);
   url.searchParams.append('tenant_id', tenant_id);
   if (nextToken) url.searchParams.append('nextToken', nextToken);

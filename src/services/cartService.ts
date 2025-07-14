@@ -134,32 +134,43 @@ export async function completeCart(
   };
 }
 
-// aca iria pero por ahora esta con data falsa
 export async function getPurchaseHistory(
   tenant_id: string,
   token: string,
-  limit = 10
-): Promise<any[]> {
-  // Datos fake para pruebas
-  return [
-    {
-      id: '1',
-      shop: 'Tienda Central',
-      date: '2024-06-01',
-      items: [
-        { name: 'Arroz', quantity: 2, price: 5.5 },
-        { name: 'Azúcar', quantity: 1, price: 4.0 },
-      ],
-      total: 15.0,
+  limit = 10,
+  lastEvaluatedKey?: string
+): Promise<{
+  items: any[];
+  last_evaluated_key: string | null;
+}> {
+  
+  const queryParams = new URLSearchParams({
+    tenant_id,
+    limit: limit.toString(),
+  });
+
+  if (lastEvaluatedKey) {
+    queryParams.append('last_evaluated_key', lastEvaluatedKey);
+  }
+
+  const url = `${API_BASE}/history?${queryParams.toString()}`;
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: token,
     },
-    {
-      id: '2',
-      shop: 'Bodega Norte',
-      date: '2024-05-28',
-      items: [
-        { name: 'Aceite', quantity: 1, price: 10.0 },
-      ],
-      total: 10.0,
-    },
-  ];
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error?.message || 'Error al obtener historial');
+  }
+
+  const result = await res.json();
+
+  return {
+    items: result.items,
+    last_evaluated_key: result.last_evaluated_key,
+  };
 }
