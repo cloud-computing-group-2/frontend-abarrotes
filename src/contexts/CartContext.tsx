@@ -2,23 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react'
 import { Product } from './ShopContext'
 import { ShopType } from '../App'
 import { useAuth } from './AuthContext'
-import { addCartItem, deleteCartItem, updateCartItem } from '../services/cartService'; 
-
-/*
-type Product = {
-  id: string;
-  name: string;
-  price: number;
-  tenant: string;
-  // ...
-};
-
-type User = {
-  id: string;
-  tenant_id: string;
-};
-
-*/
+import { addCartItem, deleteCartItem, updateCartItem } from '../services/cartService'
 
 interface CartItem extends Product {
   quantity: number
@@ -56,105 +40,99 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const { isAuthenticated, user } = useAuth()
 
   const addToCart = async (product: Product) => {
-    if (!isAuthenticated) {
-      alert('Debes iniciar sesión');
-      return;
+    if (!isAuthenticated || !user || !user.tenant_id || !user.user_id || !user.token) {
+      alert('Faltan datos del usuario o no estás autenticado')
+      return
     }
 
-    if (user && user.tenant_id !== product.tenant) {
-      alert(`Solo puedes comprar productos de tu tienda (${user.tenant_id})`);
-      return;
+    if (user.tenant_id !== product.tenant) {
+      alert(`Solo puedes comprar productos de tu tienda (${user.tenant_id})`)
+      return
     }
 
-    const existingItem = items.find(item => item.id === product.id);
-    const newQuantity = existingItem ? existingItem.quantity + 1 : 1;
-
-    // Backup del carrito actual
-    const previousItems = [...items];
+    const existingItem = items.find(item => item.id === product.id)
+    const newQuantity = existingItem ? existingItem.quantity + 1 : 1
+    const previousItems = [...items]
 
     try {
-      // Optimistic update
       setItems(prevItems => {
         if (existingItem) {
           return prevItems.map(item =>
             item.id === product.id
               ? { ...item, quantity: item.quantity + 1 }
               : item
-          );
+          )
         } else {
-          setCurrentTenant(product.tenant);
-          return [...prevItems, { ...product, quantity: 1 }];
+          setCurrentTenant(product.tenant)
+          return [...prevItems, { ...product, quantity: 1 }]
         }
-      });
+      })
 
-      // Backend update
       if (existingItem) {
         await updateCartItem(
           {
-            tenant_id: user?.tenant_id,
-            user_id: user?.user_id,
+            tenant_id: user.tenant_id,
+            user_id: user.user_id,
             product_id: product.id,
             amount: newQuantity,
           },
-          user?.token
-        );
+          user.token
+        )
       } else {
         await addCartItem(
           {
-            tenant_id: user?.tenant_id,
-            user_id: user?.user_id,
+            tenant_id: user.tenant_id,
+            user_id: user.user_id,
             product_id: product.id,
             amount: 1,
           },
-          user?.token
-        );
+          user.token
+        )
       }
-
     } catch (error: any) {
-      // Revert if backend fails
-      setItems(previousItems);
-      alert('Error al actualizar el carrito: ' + error.message);
-      console.error('Error en el backend:', error.message);
+      setItems(previousItems)
+      alert('Error al actualizar el carrito: ' + error.message)
+      console.error('Error en el backend:', error.message)
     }
-  };
-
-
+  }
 
   const removeFromCart = (productId: string) => {
-
-      if (user && user.token) {
-        deleteCartItem(
-          {
-            tenant_id: user.tenant_id,
-            user_id: user.user_id,
-            product_id: productId,
-          },
-          user.token
-        ).then(response => {
-          console.log(response.message);
-        }).catch(error => {
-          console.error('Error al eliminar producto del carrito:', error.message);
-        });
-      } else {
-        console.error('Usuario no autenticado');
-      }
+    if (user?.tenant_id && user?.user_id && user?.token) {
+      deleteCartItem(
+        {
+          tenant_id: user.tenant_id,
+          user_id: user.user_id,
+          product_id: productId,
+        },
+        user.token
+      )
+        .then(response => {
+          console.log(response.message)
+        })
+        .catch(error => {
+          console.error('Error al eliminar producto del carrito:', error.message)
+        })
+    } else {
+      console.error('Usuario no autenticado o datos incompletos')
+    }
 
     setItems(prevItems => prevItems.filter(item => item.id !== productId))
   }
 
   const updateQuantity = async (productId: string, quantity: number) => {
-    if (!user) return;
+    if (!user || !user.tenant_id || !user.user_id || !user.token) return
 
     if (quantity <= 0) {
-      removeFromCart(productId); // Aquí podrías también hacer una llamada al backend si quieres
-      return;
+      removeFromCart(productId)
+      return
     }
-    const previousItems = [...items];
+
+    const previousItems = [...items]
     setItems(prevItems =>
       prevItems.map(item =>
         item.id === productId ? { ...item, quantity } : item
       )
-    );
+    )
 
     try {
       await updateCartItem(
@@ -165,16 +143,13 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           amount: quantity,
         },
         user.token
-      );
+      )
     } catch (error: any) {
-      setItems(previousItems);
-      alert('Error al actualizar el carrito: ' + error.message);
-      console.error('Error en el backend:', error.message);
+      setItems(previousItems)
+      alert('Error al actualizar el carrito: ' + error.message)
+      console.error('Error en el backend:', error.message)
     }
-  };
-
-
-
+  }
 
   const clearCart = () => {
     setItems([])
@@ -185,7 +160,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   }
 
   const getTotalPrice = () => {
-    return items.reduce((total, item) => total + (item.price * item.quantity), 0)
+    return items.reduce((total, item) => total + item.price * item.quantity, 0)
   }
 
   const value: CartContextType = {
@@ -197,7 +172,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     clearCart,
     getTotalItems,
     getTotalPrice,
-    setCurrentTenant
+    setCurrentTenant,
   }
 
   return (
@@ -205,4 +180,4 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       {children}
     </CartContext.Provider>
   )
-} 
+}

@@ -61,11 +61,17 @@ const CheckoutPage = () => {
   }
 
 const handleConfirmOrder = async () => {
-  if (!isAuthenticated || !user) {
-    alert('Debes iniciar sesión para confirmar tu compra');
+  if (
+    !isAuthenticated ||
+    !user ||
+    !user.tenant_id ||
+    !user.user_id ||
+    !user.token
+  ) {
+    alert('Faltan datos del usuario o no estás autenticado');
     return;
   }
-  
+
   setLoading(true);
 
   try {
@@ -74,7 +80,7 @@ const handleConfirmOrder = async () => {
         tenant_id: user.tenant_id,
         user_id: user.user_id,
       },
-      user?.token
+      user.token
     );
 
     const totalPrice = getTotalPrice();
@@ -92,14 +98,14 @@ Precio Total: $${totalPrice.toFixed(2)}
     alert(message);
     clearCart();
     navigate('/');
-
   } catch (error: any) {
     console.error('Error al confirmar la compra en backend:', error.message);
     alert('Ocurrió un error al confirmar tu compra. Intenta nuevamente.');
   } finally {
-    setLoading(false); 
+    setLoading(false);
   }
 };
+
 
   const tenantName = items.length > 0 ? getShopName(items[0].tenant) : 'Tienda'
 

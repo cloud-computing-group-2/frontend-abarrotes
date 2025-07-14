@@ -1,4 +1,5 @@
-// src/services/authService.ts
+// src/services/authService.ts actualizado con rol
+
 export interface RegisterData {
   user_id: string;
   tenant_id: string;
@@ -35,7 +36,7 @@ async function register(data: RegisterData): Promise<AuthResponse> {
   }
 }
 
-async function login(data: LoginData): Promise<{ statusCode: number; token?: string; message?: string }> {
+async function login(data: LoginData): Promise<{ statusCode: number; token?: string; rol?: string; message?: string }> {
   try {
     const res = await fetch(`${API_BASE}/usuarios/login`, {
       method: 'POST',
@@ -46,15 +47,14 @@ async function login(data: LoginData): Promise<{ statusCode: number; token?: str
     const payload = await res.json();
     console.log('Login API response:', { status: res.status, payload });
 
-    // 🔧 Manejo flexible del token
-    const token = payload.token || (payload.body && payload.body.token);
-    const expires = payload.expires_at || (payload.body && payload.body.expires_at);
+    const token = payload.token || payload.body?.token;
+    const rol = payload.rol || payload.body?.rol;
+    const message = payload.error || payload.message || payload.body?.error || 'Error desconocido';
 
     if (res.ok && token) {
-      return { statusCode: res.status, token };
+      return { statusCode: res.status, token, rol };
     }
 
-    const message = payload.error || payload.message || payload.body?.error || 'Error desconocido';
     return { statusCode: res.status, message };
   } catch (error) {
     console.error('Login API error:', error);
@@ -63,7 +63,10 @@ async function login(data: LoginData): Promise<{ statusCode: number; token?: str
 }
 
 
-async function validateUser(token: string, tenant_id: string): Promise<{ valid: boolean; message?: string }> {
+async function validateUser(
+  token: string,
+  tenant_id: string
+): Promise<{ valid: boolean; message?: string }> {
   const res = await fetch(`${API_BASE}/usuarios/validar`, {
     method: 'POST',
     headers: {

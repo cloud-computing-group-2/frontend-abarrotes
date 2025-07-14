@@ -4,11 +4,11 @@ import { Product } from '../contexts/ShopContext'
 
 interface SearchBarProps {
   products: Product[]
-  onSearchResults: (results: Product[], query: string) => void
+  onSearch: (results: Product[], query: string) => void
   placeholder?: string
 }
 
-const SearchBar = ({ products, onSearchResults, placeholder = "Buscar productos..." }: SearchBarProps) => {
+const SearchBar = ({ products, onSearch, placeholder = "Buscar productos..." }: SearchBarProps) => {
   const [query, setQuery] = useState('')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
@@ -84,7 +84,7 @@ const SearchBar = ({ products, onSearchResults, placeholder = "Buscar productos.
 useEffect(() => {
   if (query.trim().length < 2) {
     setFilteredProducts([])
-    onSearchResults([], query)
+    onSearch([], query)
     setIsDropdownOpen(false)
     setSelectedIndex(-1)
     return
@@ -92,7 +92,7 @@ useEffect(() => {
 
   const results = searchProducts(query)
   setFilteredProducts(results)
-  onSearchResults(results, query)
+  onSearch(results, query)
   setIsDropdownOpen(results.length > 0)
   setSelectedIndex(-1)
 }, [query])
@@ -143,14 +143,14 @@ useEffect(() => {
     setQuery(product.name)
     setIsDropdownOpen(false)
     setSelectedIndex(-1)
-    onSearchResults([product],query)
+    onSearch([product],query)
   }
 
   const handleClearSearch = () => {
     setQuery('')
     setIsDropdownOpen(false)
     setSelectedIndex(-1)
-    onSearchResults([],query)
+    onSearch([],query)
     inputRef.current?.focus()
   }
 

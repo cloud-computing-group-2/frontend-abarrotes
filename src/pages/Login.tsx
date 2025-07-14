@@ -19,17 +19,16 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    
-    // Validación básica
+
     if (!userId.trim() || !tenantId || !password.trim()) {
       setError('Por favor completa todos los campos.')
       return
     }
-    
+
     setIsLoading(true)
 
     try {
@@ -46,13 +45,11 @@ const Login = () => {
       setIsLoading(false)
     }
   }
-  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          {/* Header */}
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -62,7 +59,6 @@ const Login = () => {
             <p className="text-gray-600">Inicia sesión en tu cuenta para continuar comprando</p>
           </div>
 
-          {/* Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -195,4 +191,4 @@ const Login = () => {
   )
 }
 
-export default Login 
+export default Login

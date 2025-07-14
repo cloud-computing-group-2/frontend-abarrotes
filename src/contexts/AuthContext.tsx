@@ -4,7 +4,8 @@ import authService, { RegisterData, LoginData } from '../services/authService';
 interface User {
   user_id: string;
   tenant_id: string;
-  token?: string; 
+  token?: string;
+  rol?: string;
 }
 
 interface AuthContextType {
@@ -24,14 +25,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
-  // Verificar si hay un usuario autenticado al cargar
+  // Cargar usuario desde localStorage al iniciar
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     const tenantId = localStorage.getItem('tenantId');
     const userId = localStorage.getItem('userId');
-    
+    const rol = localStorage.getItem('userRol'); // ✅ cargar rol
+
     if (token && tenantId && userId) {
-      setUser({ user_id: userId, tenant_id: tenantId, token: token});
+      setUser({ user_id: userId, tenant_id: tenantId, token, rol: rol || 'USER' });
     }
   }, []);
 
@@ -39,8 +41,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       const { statusCode, body } = await authService.register({ user_id, tenant_id, password });
-      console.log('Register response:', { statusCode, body });
-      // Considerar exitoso si el statusCode es 200 o 201 (Created)
       return statusCode === 200 || statusCode === 201;
     } catch (error) {
       console.error('Register error:', error);
@@ -53,13 +53,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (user_id: string, tenant_id: string, password: string) => {
     setLoading(true);
     try {
-      const { statusCode, token } = await authService.login({ user_id, tenant_id, password });
-      console.log('Login response:', { statusCode, token });
+      const { statusCode, token, rol } = await authService.login({ user_id, tenant_id, password });
+      console.log('Login response:', { statusCode, token, rol });
+
       if ((statusCode === 200 || statusCode === 201) && token) {
         localStorage.setItem('authToken', token);
         localStorage.setItem('tenantId', tenant_id);
         localStorage.setItem('userId', user_id);
-        setUser({ user_id, tenant_id, token });
+        localStorage.setItem('userRol', rol || 'USER'); // ✅ guardar rol
+
+        setUser({ user_id, tenant_id, token, rol: rol || 'USER' });
         return true;
       }
       return false;
@@ -75,17 +78,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('authToken');
     localStorage.removeItem('tenantId');
     localStorage.removeItem('userId');
+    localStorage.removeItem('userRol'); // ✅ eliminar rol
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated: !!user, 
-      register, 
-      login, 
-      logout, 
-      loading 
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated: !!user,
+      register,
+      login,
+      logout,
+      loading
     }}>
       {children}
     </AuthContext.Provider>
