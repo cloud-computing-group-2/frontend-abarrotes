@@ -10,6 +10,7 @@ export interface Product {
   description: string
   category: string
   inStock: boolean
+  stock: number
   tenant: ShopType
 }
 
@@ -20,6 +21,11 @@ interface ShopContextType {
     secondary: string
     accent: string
     background: string
+    text: string
+    border: string
+    hover: string
+    button: string
+    card: string
   }
   getShopName: (shopType: ShopType) => string
   loadShopProducts: (shopType: ShopType, token: string, append?: boolean) => Promise<void>
@@ -80,24 +86,39 @@ export const ShopProvider: React.FC<ShopProviderProps> = ({ children }) => {
     switch (shopType) {
       case 'tottus':
         return {
-          primary: 'bg-tottus-600',
-          secondary: 'bg-tottus-500',
-          accent: 'bg-tottus-400',
-          background: 'bg-tottus-50',
+          primary: 'bg-green-600',
+          secondary: 'bg-green-500',
+          accent: 'bg-green-400',
+          background: 'bg-green-50',
+          text: 'text-green-800',
+          border: 'border-green-200',
+          hover: 'hover:bg-green-700',
+          button: 'bg-green-600 hover:bg-green-700',
+          card: 'bg-white border-green-200',
         }
       case 'plazavea':
         return {
-          primary: 'bg-plazavea-red-600',
-          secondary: 'bg-plazavea-yellow-500',
-          accent: 'bg-plazavea-red-400',
-          background: 'bg-plazavea-yellow-100',
+          primary: 'bg-red-600',
+          secondary: 'bg-yellow-500',
+          accent: 'bg-red-400',
+          background: 'bg-gradient-to-br from-yellow-50 to-red-50',
+          text: 'text-red-800',
+          border: 'border-red-200',
+          hover: 'hover:bg-red-700',
+          button: 'bg-gradient-to-r from-red-600 to-yellow-500 hover:from-red-700 hover:to-yellow-600',
+          card: 'bg-white border-red-200',
         }
       case 'wong':
         return {
-          primary: 'bg-wong-red-600',
+          primary: 'bg-red-600',
           secondary: 'bg-white',
-          accent: 'bg-wong-red-400',
-          background: 'bg-gray-50',
+          accent: 'bg-red-400',
+          background: 'bg-gradient-to-br from-white to-red-50',
+          text: 'text-red-800',
+          border: 'border-red-200',
+          hover: 'hover:bg-red-700',
+          button: 'bg-red-600 hover:bg-red-700 text-white',
+          card: 'bg-white border-red-200',
         }
       default:
         return {
@@ -105,6 +126,11 @@ export const ShopProvider: React.FC<ShopProviderProps> = ({ children }) => {
           secondary: 'bg-blue-500',
           accent: 'bg-blue-400',
           background: 'bg-blue-50',
+          text: 'text-blue-800',
+          border: 'border-blue-200',
+          hover: 'hover:bg-blue-700',
+          button: 'bg-blue-600 hover:bg-blue-700',
+          card: 'bg-white border-blue-200',
         }
     }
   }

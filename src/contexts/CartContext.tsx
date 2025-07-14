@@ -2,7 +2,9 @@ import React, { createContext, useContext, useState, ReactNode } from 'react'
 import { Product } from './ShopContext'
 import { ShopType } from '../App'
 import { useAuth } from './AuthContext'
+import { useShop } from './ShopContext'
 import { addCartItem, deleteCartItem, updateCartItem } from '../services/cartService'
+import { checkProductStock } from '../services/productService'
 
 interface CartItem extends Product {
   quantity: number
@@ -18,6 +20,7 @@ interface CartContextType {
   getTotalItems: () => number
   getTotalPrice: () => number
   setCurrentTenant: (tenant: ShopType) => void
+  verifyCartStock: () => Promise<void>
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -38,6 +41,37 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([])
   const [currentTenant, setCurrentTenant] = useState<ShopType | null>(null)
   const { isAuthenticated, user } = useAuth()
+  const { getShopProducts } = useShop()
+
+  // Función para verificar stock usando la información ya cargada
+  const checkStockFromLoadedProducts = (productId: string, tenant: ShopType): { stock: number; available: boolean } => {
+    const products = getShopProducts(tenant)
+    const product = products.find(p => p.id === productId)
+    
+    if (!product) {
+      return { stock: 0, available: false }
+    }
+    
+    return {
+      stock: product.stock,
+      available: product.inStock
+    }
+  }
+
+  // Función para verificar stock en tiempo real desde la API
+  const checkStockFromAPI = async (productId: string, tenant: ShopType): Promise<{ stock: number; available: boolean }> => {
+    if (!user?.token) {
+      return { stock: 0, available: false }
+    }
+
+    try {
+      return await checkProductStock(tenant, productId, user.token)
+    } catch (error) {
+      console.error('Error verificando stock desde API:', error)
+      // Fallback a la información local
+      return checkStockFromLoadedProducts(productId, tenant)
+    }
+  }
 
   const addToCart = async (product: Product) => {
     if (!isAuthenticated || !user || !user.tenant_id || !user.user_id || !user.token) {
@@ -50,8 +84,23 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       return
     }
 
+    // Verificar stock disponible usando la información ya cargada
+    const stockInfo = checkStockFromLoadedProducts(product.id, product.tenant)
+    
+    if (!stockInfo.available) {
+      alert('Este producto no está disponible en stock')
+      return
+    }
+
     const existingItem = items.find(item => item.id === product.id)
     const newQuantity = existingItem ? existingItem.quantity + 1 : 1
+    
+    // Verificar si la cantidad solicitada está disponible en stock
+    if (newQuantity > stockInfo.stock) {
+      alert(`Solo hay ${stockInfo.stock} unidades disponibles de este producto`)
+      return
+    }
+
     const previousItems = [...items]
 
     try {
@@ -127,6 +176,19 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       return
     }
 
+    // Verificar stock disponible antes de actualizar la cantidad
+    const stockInfo = checkStockFromLoadedProducts(productId, user.tenant_id as ShopType)
+    
+    if (!stockInfo.available) {
+      alert('Este producto no está disponible en stock')
+      return
+    }
+
+    if (quantity > stockInfo.stock) {
+      alert(`Solo hay ${stockInfo.stock} unidades disponibles de este producto`)
+      return
+    }
+
     const previousItems = [...items]
     setItems(prevItems =>
       prevItems.map(item =>
@@ -163,6 +225,51 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     return items.reduce((total, item) => total + item.price * item.quantity, 0)
   }
 
+  const verifyCartStock = async () => {
+    if (!user?.token) {
+      alert('Usuario no autenticado, no se puede verificar el stock del carrito.')
+      return
+    }
+
+    const updatedItems: CartItem[] = []
+    let stockChanged = false
+    let unavailableProducts: string[] = []
+
+    for (const item of items) {
+      try {
+        const stockInfo = await checkStockFromAPI(item.id, item.tenant)
+        
+        if (!stockInfo.available) {
+          unavailableProducts.push(item.name)
+          updatedItems.push({ ...item, quantity: 0 })
+          stockChanged = true
+        } else if (item.quantity > stockInfo.stock) {
+          updatedItems.push({ ...item, quantity: stockInfo.stock })
+          stockChanged = true
+        } else {
+          updatedItems.push(item)
+        }
+      } catch (error) {
+        console.error(`Error verificando stock de ${item.name}:`, error)
+        updatedItems.push(item) // Mantener cantidad actual si hay error
+      }
+    }
+
+    setItems(updatedItems)
+
+    // Mostrar mensaje al usuario
+    if (stockChanged) {
+      let message = 'Se actualizó el stock de algunos productos:\n'
+      if (unavailableProducts.length > 0) {
+        message += `\nProductos sin stock: ${unavailableProducts.join(', ')}`
+      }
+      message += '\n\nSe han ajustado las cantidades según el stock disponible.'
+      alert(message)
+    } else {
+      alert('El stock de todos los productos está actualizado.')
+    }
+  }
+
   const value: CartContextType = {
     items,
     currentTenant,
@@ -173,6 +280,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     getTotalItems,
     getTotalPrice,
     setCurrentTenant,
+    verifyCartStock,
   }
 
   return (

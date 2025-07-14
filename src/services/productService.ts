@@ -37,8 +37,53 @@ export async function fetchShopProducts(
       description: item.descripcion,
       category: item.categoria,
       inStock: item.stock > 0,
+      stock: item.stock || 0,
       tenant: item.tenant_id,
     })),
     nextToken: data.nextToken || null,
   };
+}
+
+// Función para verificar el stock de un producto específico
+export async function checkProductStock(
+  tenant_id: string,
+  product_id: string,
+  token: string
+): Promise<{ stock: number; available: boolean }> {
+  
+  try {
+    // Usar el endpoint de listar productos y filtrar por el producto específico
+    const url = new URL(`${API_BASE}/productos/listar`);
+    url.searchParams.append('tenant_id', tenant_id);
+
+    const res = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error?.error || 'Error al verificar stock del producto');
+    }
+
+    const data = await res.json();
+    
+    // Buscar el producto específico en la lista
+    const product = data.items.find((item: any) => item.producto_id === product_id);
+    
+    if (!product) {
+      throw new Error('Producto no encontrado');
+    }
+
+    return {
+      stock: product.stock || 0,
+      available: (product.stock || 0) > 0,
+    };
+  } catch (error) {
+    console.error('Error verificando stock:', error);
+    throw error;
+  }
 }
