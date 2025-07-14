@@ -41,15 +41,15 @@ const HistoryPage = () => {
 
     try {
       const { items, last_evaluated_key } = await getPurchaseHistory(
-        user.tenant_id,
+        user.tenant_id + '#' + user.user_id,
         user.token || '',
         10,
         lastKey
       );
       setHistory(prev => [...prev, ...items]);
-      setLastKey(last_evaluated_key);
+      setLastKey(last_evaluated_key || null);
     } catch (err: any) {
-      console.error('Error paginando:', err);
+      setError(err.message || 'Error al cargar más historial');
     }
   };
 
@@ -72,7 +72,9 @@ const HistoryPage = () => {
                 console.log('Order item:', order),
                 <li key={order.cart_id || idx} className="border-b pb-4 last:border-b-0 last:pb-0">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="font-semibold text-gray-800">{order.tenant_id.split('#')[0]|| 'Tienda'}</span>
+                    <span className="font-semibold text-gray-800">
+                      {'Tienda ' + (order.tenant_id?.split('#')[0]?.toUpperCase() || 'TIENDA')}
+                    </span>
                     <span className="text-sm text-gray-500">{order.date || order.fecha || ''}</span>
                   </div>
                   <ul className="ml-4 list-disc text-gray-700 text-sm mb-2">
@@ -89,7 +91,18 @@ const HistoryPage = () => {
           )
         )}
       </div>
-    </div>
+        {lastKey && (
+          <div className="text-center mt-4">
+            <button
+              onClick={loadMore}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+            >
+              Ver más
+            </button>
+        </div>
+        )}
+      
+  </div>
   );
 };
 
