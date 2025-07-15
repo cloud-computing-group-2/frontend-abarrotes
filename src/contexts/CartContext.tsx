@@ -3,7 +3,7 @@ import { Product } from './ShopContext'
 import { ShopType } from '../App'
 import { useAuth } from './AuthContext'
 import { useShop } from './ShopContext'
-import { addCartItem, deleteCartItem, updateCartItem } from '../services/cartService'
+import { addCartItem, deleteCartItem, getCart, updateCartItem } from '../services/cartService'
 import { checkProductStock } from '../services/productService'
 
 interface CartItem extends Product {
@@ -21,6 +21,7 @@ interface CartContextType {
   getTotalPrice: () => number
   setCurrentTenant: (tenant: ShopType) => void
   verifyCartStock: () => Promise<void>
+  fetchCartFromBackend: () =>Promise<void>
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -72,6 +73,40 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       return checkStockFromLoadedProducts(productId, tenant)
     }
   }
+
+  const fetchCartFromBackend = async () => {
+    if (!user || !user.tenant_id || !user.user_id || !user.token) return;
+
+    try {
+      const { products } = await getCart(user.tenant_id, user.user_id, user.token);
+
+      console.log("prods");
+      console.log(products);
+
+      setItems(
+        products.map(p => ({
+          id: p.product_id,
+          name: p.nombre,
+          price: p.price,
+          image: p.image || '', // valor por defecto
+          description: p.description || '',
+          category: p.category || '',
+          inStock: true, // o false si lo sabes
+          stock: p.stock || 100, // o el valor real si lo tienes
+          tenant: user?.tenant_id as ShopType,
+          quantity: p.amount ?? 1,
+        }))
+      );
+
+
+      if (products.length > 0) {
+        setCurrentTenant(products[0].tenant);
+      }
+    } catch (error: any) {
+      console.error('Error al obtener el carrito:', error.message);
+      alert('No se pudo cargar el carrito');
+    }
+  };
 
   const addToCart = async (product: Product) => {
     if (!isAuthenticated || !user || !user.tenant_id || !user.user_id || !user.token) {
@@ -281,6 +316,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     getTotalPrice,
     setCurrentTenant,
     verifyCartStock,
+    fetchCartFromBackend,
   }
 
   return (

@@ -174,3 +174,42 @@ export async function getPurchaseHistory(
     last_evaluated_key: result.last_evaluated_key,
   };
 }
+
+export async function getCart(
+  tenant_id: string,
+  user_id: string,
+  token: string
+): Promise<{
+  message: string;
+  products: any[];
+  total_price: string;
+}> {
+  const queryParams = new URLSearchParams({
+    tenant_id,
+    user_id,
+  });
+
+  const url = `${API_BASE}/cart?${queryParams.toString()}`;
+
+  console.log(url);
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: token,
+    },
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error?.message || 'Error al obtener el carrito');
+  }
+
+  const result = await res.json();
+
+  return {
+    message: result.message,
+    products: result.products,
+    total_price: result.total_price,
+  };
+}

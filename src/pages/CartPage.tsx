@@ -4,6 +4,7 @@ import { useShop } from '../contexts/ShopContext'
 import { useAuth } from '../contexts/AuthContext'
 import { X, Plus, Minus, ShoppingBag, CreditCard, ArrowLeft } from 'lucide-react'
 import { ShopType } from '../App'
+import { useEffect } from 'react'
 
 const CartPage = () => {
   const navigate = useNavigate()
@@ -16,10 +17,11 @@ const CartPage = () => {
     getTotalItems,
     getTotalPrice,
     clearCart,
-    verifyCartStock
+    verifyCartStock,
+    fetchCartFromBackend,
   } = useCart()
   const { getShopName } = useShop()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
 
   if (!shopType || !['tottus', 'plazavea', 'wong'].includes(shopType)) {
     return (
@@ -36,6 +38,12 @@ const CartPage = () => {
       </div>
     )
   }
+
+
+  useEffect(() => {
+    fetchCartFromBackend();
+    console.log(items);
+  }, [user]);
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
