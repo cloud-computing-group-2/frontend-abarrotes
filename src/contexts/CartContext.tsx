@@ -104,7 +104,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       }
     } catch (error: any) {
       console.error('Error al obtener el carrito:', error.message);
-      alert('No se pudo cargar el carrito');
+      //alert('No se pudo cargar el carrito');
     }
   };
 
