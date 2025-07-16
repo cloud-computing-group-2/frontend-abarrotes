@@ -119,6 +119,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       return
     }
 
+    /*
     // Verificar stock disponible usando la información ya cargada
     const stockInfo = checkStockFromLoadedProducts(product.id, product.tenant)
     
@@ -126,16 +127,15 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       alert('Este producto no está disponible en stock')
       return
     }
-
-    const existingItem = items.find(item => item.id === product.id)
-    const newQuantity = existingItem ? existingItem.quantity + 1 : 1
     
     // Verificar si la cantidad solicitada está disponible en stock
     if (newQuantity > stockInfo.stock) {
       alert(`Solo hay ${stockInfo.stock} unidades disponibles de este producto`)
       return
     }
-
+*/
+    const existingItem = items.find(item => item.id === product.id)
+    const newQuantity = existingItem ? existingItem.quantity + 1 : 1
     const previousItems = [...items]
 
     try {
@@ -210,9 +210,11 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       removeFromCart(productId)
       return
     }
-
+/*
     // Verificar stock disponible antes de actualizar la cantidad
     const stockInfo = checkStockFromLoadedProducts(productId, user.tenant_id as ShopType)
+
+    console.log("stockInfo");
     
     if (!stockInfo.available) {
       alert('Este producto no está disponible en stock')
@@ -223,7 +225,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       alert(`Solo hay ${stockInfo.stock} unidades disponibles de este producto`)
       return
     }
-
+*/
     const previousItems = [...items]
     setItems(prevItems =>
       prevItems.map(item =>
