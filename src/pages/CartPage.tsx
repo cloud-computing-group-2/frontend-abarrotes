@@ -43,7 +43,7 @@ const CartPage = () => {
   useEffect(() => {
     fetchCartFromBackend();
     console.log(items);
-  }, [user]);
+  }, []);
 
   const handleCheckout = () => {
     if (!isAuthenticated) {

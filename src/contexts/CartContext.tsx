@@ -255,6 +255,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   }
 
   const getTotalItems = () => {
+    console.log(items)
     return items.reduce((total, item) => total + item.quantity, 0)
   }
 
