@@ -41,9 +41,11 @@ const CartPage = () => {
 
 
   useEffect(() => {
+    console.log('Cargando carrito para el usuario:')
+    console.log(user)
     fetchCartFromBackend();
     console.log(items);
-  }, []);
+  }, [user]);
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
