@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { useCart } from '../contexts/CartContext'
+import { CartItem, useCart } from '../contexts/CartContext'
 import { useShop } from '../contexts/ShopContext'
 import { useAuth } from '../contexts/AuthContext'
 import { X, Plus, Minus, ShoppingBag, CreditCard, ArrowLeft } from 'lucide-react'
@@ -20,6 +20,8 @@ const CartPage = () => {
     clearCart,
     verifyCartStock,
     fetchCartFromBackend,
+    addToCart,
+    updateCart
   } = useCart()
   const { getShopName } = useShop()
   const { isAuthenticated, user } = useAuth()
@@ -56,6 +58,17 @@ const CartPage = () => {
 
     navigate('/checkout')
   }
+
+  const handleAddToCart = async (item: CartItem) => {
+  try {
+    await addToCart(item) // puedes cambiar el 1 si quieres seleccionar cantidad
+    alert('Producto agregado al carrito')
+  } catch (err) {
+    alert('Error al agregar al carrito')
+    console.error(err)
+  }
+}
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -162,31 +175,12 @@ const CartPage = () => {
                             >
                               <Plus className="h-5 w-5" />
                             </button>
-                            {/* Botón para actualizar stock */}
                             <button
-                              onClick={async () => {
-                                if (!user?.token) {
-                                  alert('No hay token de usuario. Inicia sesión.');
-                                  return;
-                                }
-                                const newStockStr = prompt('Nuevo stock para este producto:', String(item.stock))
-                                if (newStockStr === null) return
-                                const newStock = parseInt(newStockStr)
-                                if (isNaN(newStock) || newStock < 0) {
-                                  alert('Stock inválido')
-                                  return
-                                }
-                                try {
-                                  await updateProductStock(item.tenant, item.id, newStock, user.token)
-                                  alert('Stock actualizado correctamente')
-                                } catch (err) {
-                                  alert('Error al actualizar el stock')
-                                }
-                              }}
-                              className="w-10 h-10 rounded-full bg-blue-200 hover:bg-blue-400 flex items-center justify-center transition-colors"
-                              title="Actualizar stock en backend"
+                              onClick={() => updateCart(item)}
+                              className="w-10 h-10 rounded-full bg-green-200 hover:bg-green-400 flex items-center justify-center transition-colors"
+                              title="Agregar al carrito"
                             >
-                              <span className="font-bold text-blue-700">S</span>
+                              <span className="font-bold text-green-700">+</span>
                             </button>
                           </div>
                           <div className="text-right">

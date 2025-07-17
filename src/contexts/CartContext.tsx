@@ -6,9 +6,11 @@ import { useShop } from './ShopContext'
 import { addCartItem, deleteCartItem, getCart, updateCartItem } from '../services/cartService'
 import { checkProductStock } from '../services/productService'
 
-interface CartItem extends Product {
+export interface CartItem extends Product {
   quantity: number
 }
+
+
 
 interface CartContextType {
   items: CartItem[]
@@ -22,6 +24,7 @@ interface CartContextType {
   setCurrentTenant: (tenant: ShopType) => void
   verifyCartStock: () => Promise<void>
   fetchCartFromBackend: () =>Promise<void>
+  updateCart: (product: CartItem) => Promise<void>
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -108,63 +111,102 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     }
   };
 
-  const addToCart = async (product: Product) => {
-    if (!isAuthenticated || !user || !user.tenant_id || !user.user_id || !user.token) {
-      alert('Faltan datos del usuario o no estás autenticado')
-      return
-    }
+const addToCart = async (product: CartItem) => {
 
-    if (user.tenant_id !== product.tenant) {
-      alert(`Solo puedes comprar productos de tu tienda (${user.tenant_id})`)
-      return
-    }
-
-
-    const existingItem = items.find(item => item.id === product.id)
-    const newQuantity = existingItem ? existingItem.quantity + 1 : 1
-    const previousItems = [...items]
-
-    try {
-      setItems(prevItems => {
-        if (existingItem) {
-          return prevItems.map(item =>
-            item.id === product.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          )
-        } else {
-          setCurrentTenant(product.tenant)
-          return [...prevItems, { ...product, quantity: 1 }]
-        }
-      })
-
-      if (existingItem) {
-        await updateCartItem(
-          {
-            tenant_id: user.tenant_id,
-            user_id: user.user_id,
-            product_id: product.id,
-            amount: newQuantity,
-          },
-          user.token
-        )
-      } else {
-        await addCartItem(
-          {
-            tenant_id: user.tenant_id,
-            user_id: user.user_id,
-            product_id: product.id,
-            amount: 1,
-          },
-          user.token
-        )
-      }
-    } catch (error: any) {
-      setItems(previousItems)
-      alert('Error al actualizar el carrito: ' + error.message)
-      console.error('Error en el backend:', error.message)
-    }
+  if (!isAuthenticated || !user?.tenant_id || !user?.user_id || !user?.token) {
+    alert('Faltan datos del usuario o no estás autenticado');
+    return;
   }
+
+  if (user.tenant_id !== product.tenant) {
+    alert(`Solo puedes comprar productos de tu tienda (${user.tenant_id})`);
+    return;
+  }
+
+  const existingItem = items.find(item => item.id === product.id);
+  const previousItems = [...items];
+
+  try {
+    if (existingItem) {
+      //const updatedAmount = existingItem.quantity + product.quantity;
+
+      await updateCartItem(
+        {
+          tenant_id: user.tenant_id,
+          user_id: user.user_id,
+          product_id: product.id,
+          amount: product.quantity,
+        },
+        user.token
+      );
+
+      setItems(
+        items.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: product.quantity }
+            : item
+        )
+      );
+    } else {
+      await addCartItem(
+        {
+          tenant_id: user.tenant_id,
+          user_id: user.user_id,
+          product_id: product.id,
+          amount: product.quantity,
+        },
+        user.token
+      );
+
+      setItems([...items, product]);
+    }
+
+    setCurrentTenant(product.tenant);
+  } catch (error: any) {
+    console.error('Error al actualizar el carrito:', error.message);
+    setItems(previousItems);
+    alert('Error al actualizar el carrito: ' + error.message);
+  }
+};
+
+const updateCart = async (product: CartItem) => {
+
+  if (!isAuthenticated || !user?.tenant_id || !user?.user_id || !user?.token) {
+    alert('Faltan datos del usuario o no estás autenticado');
+    return;
+  }
+
+  if (user.tenant_id !== product.tenant) {
+    alert(`Solo puedes comprar productos de tu tienda (${user.tenant_id})`);
+    return;
+  }
+  const previousItems = [...items];
+  setItems(
+    items.map(item =>
+      item.id === product.id
+        ? { ...item, quantity: product.quantity }
+        : item
+    )
+  );
+
+  try {
+
+      await updateCartItem(
+        {
+          tenant_id: user.tenant_id,
+          user_id: user.user_id,
+          product_id: product.id,
+          amount: product.quantity,
+        },
+        user.token
+      );
+    
+  } catch (error: any) {
+    console.error('Error al actualizar el carrito:', error.message);
+    alert('Error al actualizar el carrito: ' + error.message);
+    setItems(previousItems);
+  }
+};
 
   const removeFromCart = (productId: string) => {
     if (user?.tenant_id && user?.user_id && user?.token) {
@@ -189,52 +231,19 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     setItems(prevItems => prevItems.filter(item => item.id !== productId))
   }
 
-  const updateQuantity = async (productId: string, quantity: number) => {
+
+  const updateQuantity = (productId: string, newQuantity: number) => {
     if (!user || !user.tenant_id || !user.user_id || !user.token) return
 
-    if (quantity <= 0) {
-      removeFromCart(productId)
-      return
-    }
-/*
-    // Verificar stock disponible antes de actualizar la cantidad
-    const stockInfo = checkStockFromLoadedProducts(productId, user.tenant_id as ShopType)
-
-    console.log("stockInfo");
-    
-    if (!stockInfo.available) {
-      alert('Este producto no está disponible en stock')
-      return
-    }
-
-    if (quantity > stockInfo.stock) {
-      alert(`Solo hay ${stockInfo.stock} unidades disponibles de este producto`)
-      return
-    }
-*/
-    const previousItems = [...items]
     setItems(prevItems =>
       prevItems.map(item =>
-        item.id === productId ? { ...item, quantity } : item
+        item.id === productId
+          ? { ...item, quantity: Math.max(0, newQuantity) }
+          : item
       )
     )
-
-    try {
-      await updateCartItem(
-        {
-          tenant_id: user.tenant_id,
-          user_id: user.user_id,
-          product_id: productId,
-          amount: quantity,
-        },
-        user.token
-      )
-    } catch (error: any) {
-      setItems(previousItems)
-      alert('Error al actualizar el carrito: ' + error.message)
-      console.error('Error en el backend:', error.message)
-    }
   }
+
 
   const clearCart = () => {
     setItems([])
@@ -306,6 +315,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     setCurrentTenant,
     verifyCartStock,
     fetchCartFromBackend,
+    updateCart,
   }
 
   return (

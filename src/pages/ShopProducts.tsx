@@ -2,11 +2,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useShop } from '../contexts/ShopContext';
-import { useCart } from '../contexts/CartContext';
+import { useCart, CartItem } from '../contexts/CartContext';
 import SearchBar from '../components/SearchBar';
 import { Product } from '../contexts/ShopContext';
 import { checkProductStock } from '../services/productService';
 import { ShopType } from '../App';
+
+
 
 const ShopProducts = () => {
   const { shopType } = useParams<{ shopType?: ShopType }>();
@@ -19,6 +21,7 @@ const ShopProducts = () => {
   const [stockMap, setStockMap] = useState<Record<string, number>>({});
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isSearchActive, setIsSearchActive] = useState(false);
+  
 
   // Load products and reset local stock
   useEffect(() => {
@@ -53,45 +56,39 @@ const ShopProducts = () => {
     setIsSearchActive(query.trim().length >= 2);
   };
 
-  const handleBuyNow = async (productId: string) => {
-    if (!isAuthenticated) return navigate('/login');
-    if (!shopType || !user?.token) return;
-    try {
-      const { stock, available } = await checkProductStock(shopType, productId, user.token);
-      if (!available) {
-        alert('Producto agotado');
-        loadShopProducts(shopType, user.token);
-        return;
-      }
-      setStockMap(prev => ({ ...prev, [productId]: stock - 1 }));
-      setAgregadoMap(prev => ({ ...prev, [productId]: (prev[productId] || 0) + 1 }));
-      const prod = products.find(p => p.id === productId);
-      if (prod) {
-        setCurrentTenant(shopType);
-        addToCart(prod);
-      }
-    } catch {
-      alert('Error al verificar stock');
-    }
+
+  const handleIncrement = (productId: string) => {
+    setAgregadoMap(prev => ({
+      ...prev,
+      [productId]: (prev[productId] || 0) + 1
+    }));
   };
 
   const handleDecrement = (productId: string) => {
-    const current = agregadoMap[productId] || 0;
-    if (current <= 0) return;
-    setAgregadoMap(prev => ({ ...prev, [productId]: current - 1 }));
-    setStockMap(prev => {
-      const orig = products.find(p => p.id === productId)?.stock ?? 0;
-      const now = prev[productId] ?? orig;
-      return { ...prev, [productId]: now + 1 };
+    setAgregadoMap(prev => {
+      const current = prev[productId] || 0;
+      if (current > 0) {
+        return {
+          ...prev,
+          [productId]: current - 1
+        };
+      }
+      return prev;
     });
-    const prod = products.find(p => p.id === productId);
-    if (prod) removeFromCart(prod);
   };
 
-  const handleComprarAhora = async (productId: string) => {
-    await handleBuyNow(productId);
-    navigate('/checkout');
-  };
+
+  const handleComprarAhora = (product: Product, count: number) => {
+
+    const cartItem: CartItem = {
+      ...product,
+      quantity: count,
+    };
+
+    addToCart(cartItem);
+
+  }
+
 
   const handleLoadMore = () => {
     if (user?.token && shopType) loadShopProducts(shopType, user.token, true);
@@ -131,7 +128,7 @@ const ShopProducts = () => {
                     {count}
                   </span>
                   <button
-                    onClick={() => handleBuyNow(product.id)}
+                    onClick={() => handleIncrement(product.id)}
                     disabled={!product.inStock}
                     className="px-2 py-1 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
                   >+</button>
@@ -144,7 +141,7 @@ const ShopProducts = () => {
               <div className="text-2xl font-bold mb-4">${product.price.toFixed(2)}</div>
 
               <button
-                onClick={() => handleComprarAhora(product.id)}
+                onClick={() => handleComprarAhora(product, count)}
                 disabled={!product.inStock}
                 className="w-full py-3 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 disabled:opacity-50 mb-2"
               >
