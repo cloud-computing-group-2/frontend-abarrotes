@@ -142,11 +142,13 @@ const addToCart = async (product: CartItem) => {
         user.token
       );
 
-      // Actualizamos el item en el estado
       const updatedItems = items.map(item =>
-        item.id === product.id ? { ...item, quantity: product.quantity } : item
+        item.id === product.id
+          ? { ...item, quantity: product.quantity + existingItem.quantity } // importante: la suma
+          : item
       );
-      setItems(updatedItems);
+
+setItems(updatedItems);
     } else {
       // No está en el carrito → agregar nuevo item
       await addCartItem(

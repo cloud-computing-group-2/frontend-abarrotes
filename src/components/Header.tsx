@@ -1,14 +1,21 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../contexts/CartContext'
 import { ShoppingCart, LogOut, User, Home, Store, Clock } from 'lucide-react'
 
+
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth()
-  const { getTotalItems } = useCart()
+  const { getTotalItems, items } = useCart()
   const navigate = useNavigate()
   const location = useLocation()
+
+
+    useEffect(() => {
+    const total = getTotalItems();
+    console.log("Total de items:", total);
+  }, [items]);
 
   const handleLogout = () => {
     logout()
