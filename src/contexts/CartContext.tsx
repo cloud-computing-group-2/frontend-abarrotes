@@ -86,11 +86,15 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       console.log("prods");
       console.log(products);
 
+      console.log("prductos");
+
+      console.log(products)
+
       setItems(
         products.map(p => ({
           id: p.product_id,
           name: p.nombre,
-          price: p.price,
+          price: p.precio,
           image: p.image || '', // valor por defecto
           description: p.description || '',
           category: p.category || '',
