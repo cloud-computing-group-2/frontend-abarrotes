@@ -77,7 +77,6 @@ const ShopProducts = () => {
     });
   };
 
-
   const handleComprarAhora = (product: Product, count: number) => {
 
     const cartItem: CartItem = {
@@ -87,8 +86,12 @@ const ShopProducts = () => {
 
     addToCart(cartItem);
 
-  }
+    setStockMap(prev => ({
+    ...prev,
+    [product.id]: (prev[product.id] ?? product.stock) - count,
+  }));
 
+  }
 
   const handleLoadMore = () => {
     if (user?.token && shopType) loadShopProducts(shopType, user.token, true);

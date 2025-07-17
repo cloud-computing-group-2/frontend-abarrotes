@@ -10,8 +10,6 @@ export interface CartItem extends Product {
   quantity: number
 }
 
-
-
 interface CartContextType {
   items: CartItem[]
   currentTenant: ShopType | null
@@ -116,7 +114,6 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   };
 
 const addToCart = async (product: CartItem) => {
-
   if (!isAuthenticated || !user?.tenant_id || !user?.user_id || !user?.token) {
     alert('Faltan datos del usuario o no estás autenticado');
     return;
@@ -127,31 +124,31 @@ const addToCart = async (product: CartItem) => {
     return;
   }
 
-  const existingItem = items.find(item => item.id === product.id);
   const previousItems = [...items];
+  console.log("items");
+  console.log(items);
+  const existingItem = items.find(item => item.id === product.id);
 
   try {
     if (existingItem) {
-      //const updatedAmount = existingItem.quantity + product.quantity;
-
+      // Ya está en el carrito → actualizar cantidad
       await updateCartItem(
         {
           tenant_id: user.tenant_id,
           user_id: user.user_id,
           product_id: product.id,
-          amount: product.quantity,
+          amount: product.quantity + existingItem.quantity, 
         },
         user.token
       );
 
-      setItems(
-        items.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: product.quantity }
-            : item
-        )
+      // Actualizamos el item en el estado
+      const updatedItems = items.map(item =>
+        item.id === product.id ? { ...item, quantity: product.quantity } : item
       );
+      setItems(updatedItems);
     } else {
+      // No está en el carrito → agregar nuevo item
       await addCartItem(
         {
           tenant_id: user.tenant_id,
@@ -172,6 +169,7 @@ const addToCart = async (product: CartItem) => {
     alert('Error al actualizar el carrito: ' + error.message);
   }
 };
+
 
 const updateCart = async (product: CartItem) => {
 
