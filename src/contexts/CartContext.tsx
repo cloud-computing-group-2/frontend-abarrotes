@@ -119,21 +119,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       return
     }
 
-    /*
-    // Verificar stock disponible usando la información ya cargada
-    const stockInfo = checkStockFromLoadedProducts(product.id, product.tenant)
-    
-    if (!stockInfo.available) {
-      alert('Este producto no está disponible en stock')
-      return
-    }
-    
-    // Verificar si la cantidad solicitada está disponible en stock
-    if (newQuantity > stockInfo.stock) {
-      alert(`Solo hay ${stockInfo.stock} unidades disponibles de este producto`)
-      return
-    }
-*/
+
     const existingItem = items.find(item => item.id === product.id)
     const newQuantity = existingItem ? existingItem.quantity + 1 : 1
     const previousItems = [...items]

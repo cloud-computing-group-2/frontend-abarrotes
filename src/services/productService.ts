@@ -1,7 +1,7 @@
 // src/services/productService.ts
 import { Product } from '../contexts/ShopContext';
 
-const API_BASE = 'https://cefdblvoi7.execute-api.us-east-1.amazonaws.com/dev/';
+const API_BASE = 'https://cefdblvoi7.execute-api.us-east-1.amazonaws.com/dev';
 
 export async function fetchShopProducts(
   tenant_id: string,
@@ -86,4 +86,32 @@ export async function checkProductStock(
     console.error('Error verificando stock:', error);
     throw error;
   }
+}
+
+// Nueva función para actualizar el stock de un producto
+export async function updateProductStock(
+  tenant_id: string,
+  product_id: string,
+  newStock: number,
+  token: string
+): Promise<{ message: string }> {
+  const url = `${API_BASE}/productos/actualizar-stock`;
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ tenant_id, producto_id: product_id, stock: newStock }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error?.error || 'Error al actualizar el stock del producto');
+  }
+
+  const result = await res.json();
+  return {
+    message: result.message,
+  };
 }

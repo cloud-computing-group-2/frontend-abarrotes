@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { X, Plus, Minus, ShoppingBag, CreditCard, ArrowLeft } from 'lucide-react'
 import { ShopType } from '../App'
 import { useEffect } from 'react'
+import { updateProductStock } from '../services/productService'
 
 const CartPage = () => {
   const navigate = useNavigate()
@@ -160,6 +161,32 @@ const CartPage = () => {
                               className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
                             >
                               <Plus className="h-5 w-5" />
+                            </button>
+                            {/* Botón para actualizar stock */}
+                            <button
+                              onClick={async () => {
+                                if (!user?.token) {
+                                  alert('No hay token de usuario. Inicia sesión.');
+                                  return;
+                                }
+                                const newStockStr = prompt('Nuevo stock para este producto:', String(item.stock))
+                                if (newStockStr === null) return
+                                const newStock = parseInt(newStockStr)
+                                if (isNaN(newStock) || newStock < 0) {
+                                  alert('Stock inválido')
+                                  return
+                                }
+                                try {
+                                  await updateProductStock(item.tenant, item.id, newStock, user.token)
+                                  alert('Stock actualizado correctamente')
+                                } catch (err) {
+                                  alert('Error al actualizar el stock')
+                                }
+                              }}
+                              className="w-10 h-10 rounded-full bg-blue-200 hover:bg-blue-400 flex items-center justify-center transition-colors"
+                              title="Actualizar stock en backend"
+                            >
+                              <span className="font-bold text-blue-700">S</span>
                             </button>
                           </div>
                           <div className="text-right">
