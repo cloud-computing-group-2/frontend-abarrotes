@@ -1,7 +1,7 @@
 // src/services/productService.ts
 import { Product } from '../contexts/ShopContext';
 
-const API_BASE = 'https://sh7pqkg24f.execute-api.us-east-1.amazonaws.com/dev';
+const API_BASE = 'https://cefdblvoi7.execute-api.us-east-1.amazonaws.com/dev/';
 
 export async function fetchShopProducts(
   tenant_id: string,
